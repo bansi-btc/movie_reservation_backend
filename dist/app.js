@@ -7,15 +7,29 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
+const movie_routes_1 = __importDefault(require("./routes/movie.routes"));
+const shows_routes_1 = __importDefault(require("./routes/shows.routes"));
+const reservation_route_1 = __importDefault(require("./routes/reservation.route"));
+const cloudinary_1 = require("./config/cloudinary");
+const multer_1 = __importDefault(require("multer"));
+const redis_1 = require("./redis");
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage });
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 const PORT = process.env.PORT || 3000;
+// app.use(upload.none());
 app.use("/auth", auth_routes_1.default);
+app.use("/movie", movie_routes_1.default);
+app.use("/shows", shows_routes_1.default);
+app.use("/reservation", reservation_route_1.default);
 app.get("/", (req, res) => {
     res.send("Hello, World!");
 });
-app.listen(PORT, () => {
+(0, cloudinary_1.cloudinaryConnect)();
+app.listen(PORT, async () => {
+    await redis_1.redis.connect();
     console.log(`Server running on http://localhost:${PORT}`);
 });
