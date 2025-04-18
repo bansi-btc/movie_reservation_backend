@@ -13,19 +13,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  isVerifed Boolean @default(false)
-  reservations Reservation[]
-}
-
 enum Role {
   USER
   ADMIN
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String
+  role         Role           @default(USER)
+  isVerified   Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  reservations Reservation[]
+}
+
+model Genre {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  movies Movie[]
 }
 
 model Movie {
@@ -33,16 +40,11 @@ model Movie {
   title       String
   description String
   posterUrl   String
-  genre       Genre @relation(fields: [genreId], references: [id])
+  genre       Genre      @relation(fields: [genreId], references: [id])
   genreId     String
   showtimes   Showtime[]
   createdAt   DateTime   @default(now())
-}
-
-model Genre {
-  id     String   @id @default(uuid())
-  name   String   @unique
-  movies Movie[] 
+  updatedAt   DateTime   @updatedAt
 }
 
 model Showtime {
@@ -52,24 +54,31 @@ model Showtime {
   startTime DateTime
   capacity  Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   seats     Seat[]
+  reservations Reservation[]
 }
 
-model Seat{
-  id        String   @id @default(uuid())
-  showtime  Showtime @relation(fields: [showtimeId], references: [id])
-  showtimeId String
-  number    Int
-  isBooked  Boolean @default(false)
+model Seat {
+  id           String        @id @default(uuid())
+  number       Int
+  showtime     Showtime      @relation(fields: [showtimeId], references: [id])
+  showtimeId   String
+  isBooked     Boolean       @default(false)
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id])
   reservationId String?
-  reservation Reservation? @relation(fields: [reservationId], references: [id])
+  createdAt    DateTime      @default(now())
+
+  @@unique([showtimeId, number]) // Ensure seat number uniqueness per showtime
 }
 
-model Reservation{
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  seat      Seat []
-  createdAt DateTime @default(now())
-  canceledAt DateTime?
+model Reservation {
+  id          String     @id @default(uuid())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  showtime    Showtime   @relation(fields: [showtimeId], references: [id])
+  showtimeId  String
+  seats       Seat[]
+  createdAt   DateTime   @default(now())
+  canceledAt  DateTime?
 }

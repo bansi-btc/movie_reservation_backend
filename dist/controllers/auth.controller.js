@@ -15,19 +15,19 @@ otplib_1.totp.options = {
 };
 const prisma = new client_1.PrismaClient();
 const signup = async (req, res) => {
-    const { email, password } = req.body;
-    const parsedInput = zodTypes_1.userSignUpInput.safeParse({ email, password });
-    if (!parsedInput.success) {
-        return res.status(400).json({
-            message: "Invalid input",
-            errors: parsedInput.error.errors,
-        });
-    }
     try {
+        const { email, password } = req.body;
+        const parsedInput = zodTypes_1.userSignUpInput.safeParse({ email, password });
+        if (!parsedInput.success) {
+            return res.status(400).json({
+                message: "Invalid input",
+                errors: parsedInput.error.errors,
+            });
+        }
         const existing = await prisma.user.findUnique({
             where: { email },
         });
-        if (existing?.isVerifed) {
+        if (existing?.isVerified) {
             return res.status(400).json({ message: "Email already used." });
         }
         const hashed = await bcrypt_1.default.hash(password, 10);
@@ -44,6 +44,7 @@ const signup = async (req, res) => {
         const baseSecret = process.env.OTP_SECRET ?? "bansi123";
         const userSecret = email + baseSecret;
         const otp = otplib_1.totp.generate(userSecret);
+        //todo add email service to send otp
         return res.status(200).json({
             success: true,
             message: "An otp has been sent to your email, please verify",
@@ -84,7 +85,7 @@ const verifyOTPController = async (req, res) => {
     }
     const updatedUser = await prisma.user.update({
         where: { email },
-        data: { isVerifed: true },
+        data: { isVerified: true },
     });
     if (!updatedUser) {
         return res.status(500).json({ message: "Failed to update user" });
@@ -99,7 +100,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.isVerifed)
+        if (!user || !user.isVerified)
             return res.status(401).json({ message: "Invalid credentials" });
         const isMatch = await bcrypt_1.default.compare(password, user.password);
         if (!isMatch)

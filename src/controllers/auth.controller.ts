@@ -13,22 +13,22 @@ totp.options = {
 const prisma = new PrismaClient();
 
 export const signup = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  const parsedInput = userSignUpInput.safeParse({ email, password });
-
-  if (!parsedInput.success) {
-    return res.status(400).json({
-      message: "Invalid input",
-      errors: parsedInput.error.errors,
-    });
-  }
-
   try {
+    const { email, password } = req.body;
+
+    const parsedInput = userSignUpInput.safeParse({ email, password });
+
+    if (!parsedInput.success) {
+      return res.status(400).json({
+        message: "Invalid input",
+        errors: parsedInput.error.errors,
+      });
+    }
+
     const existing = await prisma.user.findUnique({
       where: { email },
     });
-    if (existing?.isVerifed) {
+    if (existing?.isVerified) {
       return res.status(400).json({ message: "Email already used." });
     }
 
@@ -49,6 +49,8 @@ export const signup = async (req: Request, res: Response) => {
     const userSecret = email + baseSecret;
 
     const otp = totp.generate(userSecret);
+
+    //todo add email service to send otp
 
     return res.status(200).json({
       success: true,
@@ -98,7 +100,7 @@ export const verifyOTPController = async (req: Request, res: Response) => {
 
   const updatedUser = await prisma.user.update({
     where: { email },
-    data: { isVerifed: true },
+    data: { isVerified: true },
   });
 
   if (!updatedUser) {
@@ -115,7 +117,7 @@ export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !user.isVerifed)
+    if (!user || !user.isVerified)
       return res.status(401).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);

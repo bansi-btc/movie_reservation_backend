@@ -84,7 +84,6 @@ const bookSeats = async (req, res) => {
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        console.log(userId, "userId");
         const parsedInput = lockSeatsInput.safeParse({
             showtimeId,
             seatsToBook,
@@ -129,15 +128,15 @@ const bookSeats = async (req, res) => {
             // Create reservation
             const reservation = await tx.reservation.create({
                 data: {
+                    showtime: {
+                        connect: { id: showtimeId },
+                    },
                     user: {
                         connect: { id: userId },
                     },
-                    seat: {
+                    seats: {
                         connect: seatIds.map((id) => ({ id })),
                     },
-                },
-                include: {
-                    seat: true,
                 },
             });
             if (!reservation) {
