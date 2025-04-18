@@ -15,7 +15,11 @@ const createGenre = async (req, res) => {
     }
     try {
         const genre = await prisma.genre.create({ data: { name } });
-        res.json(genre);
+        res.status(200).json({
+            success: true,
+            message: "Genre created successfully",
+            genre,
+        });
     }
     catch (err) {
         res.status(500).json({ message: "Genre creation failed", err });
