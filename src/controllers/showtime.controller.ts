@@ -3,27 +3,11 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const createSeats = async (showtimeId: string, capacity: number) => {
-  try {
-    for (let i = 1; i <= capacity; i++) {
-      await prisma.seat.create({
-        data: {
-          number: i,
-          showtimeId,
-        },
-      });
-    }
-  } catch (err: any) {
-    throw new Error(err);
-  }
-};
-
 export const createShowtime = async (req: Request, res: Response) => {
   const { movieId, startTime, capacity } = req.body;
 
   const startTimeDate = new Date(startTime);
 
-  console.log(startTimeDate);
   try {
     const movieExists = await prisma.movie.findUnique({
       where: { id: movieId },

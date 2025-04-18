@@ -3,25 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listShowtimesOfMovie = exports.createShowtime = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-const createSeats = async (showtimeId, capacity) => {
-    try {
-        for (let i = 1; i <= capacity; i++) {
-            await prisma.seat.create({
-                data: {
-                    number: i,
-                    showtimeId,
-                },
-            });
-        }
-    }
-    catch (err) {
-        throw new Error(err);
-    }
-};
 const createShowtime = async (req, res) => {
     const { movieId, startTime, capacity } = req.body;
     const startTimeDate = new Date(startTime);
-    console.log(startTimeDate);
     try {
         const movieExists = await prisma.movie.findUnique({
             where: { id: movieId },

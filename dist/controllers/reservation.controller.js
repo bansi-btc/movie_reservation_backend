@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bookSeats = exports.lockSeatTemporarily = void 0;
+exports.lockSeatTemporarily = exports.bookSeats = void 0;
 const zod_1 = require("zod");
 const redis_1 = require("../redis");
 const client_1 = require("@prisma/client");
@@ -9,6 +9,68 @@ const lockSeatsInput = zod_1.z.object({
     seatsToBook: zod_1.z.array(zod_1.z.number()),
 });
 const prisma = new client_1.PrismaClient();
+const bookSeatsInput = zod_1.z.object({
+    showtimeId: zod_1.z.string(),
+    seatsToBook: zod_1.z.array(zod_1.z.number()),
+});
+const bookSeats = async (req, res) => {
+    try {
+        const { showtimeId, seatsToBook } = req.body;
+        const userId = req.user.id;
+        const showTime = await prisma.showtime.findUnique({
+            where: {
+                id: showtimeId,
+            },
+        });
+        if (!showTime) {
+            return res.status(400).json({ message: "Showtime not found" });
+        }
+        const seats = await prisma.seat.findMany({
+            where: {
+                showtimeId,
+                number: { in: seatsToBook },
+                isBooked: false,
+            },
+        });
+        if (seats.length !== seatsToBook.length) {
+            return res.status(400).json({
+                success: false,
+                message: "Some seats are already booked",
+            });
+        }
+        const parsedInput = bookSeatsInput.safeParse({
+            showtimeId,
+            seatsToBook,
+        });
+        if (!parsedInput.success) {
+            return res
+                .status(400)
+                .json({ message: "Invalid input", error: parsedInput.error.errors });
+        }
+        const bookingJob = await prisma.bookingJob.create({
+            data: {
+                showtimeId,
+                userId,
+            },
+        });
+        if (!bookingJob) {
+            return res.status(400).json({ message: "Failed to create booking job" });
+        }
+        const bookingObject = {
+            bookingId: bookingJob.id,
+            showtimeId,
+            userId,
+        };
+        redis_1.redis.lPush("bookings", JSON.stringify(bookingObject));
+        return res.status(200).json({
+            success: true,
+            message: "Seats booking in progress",
+            bookingJob,
+        });
+    }
+    catch (err) { }
+};
+exports.bookSeats = bookSeats;
 const lockSeatTemporarily = async (req, res) => {
     try {
         const locks = [];
@@ -77,94 +139,95 @@ const lockSeatTemporarily = async (req, res) => {
     }
 };
 exports.lockSeatTemporarily = lockSeatTemporarily;
-const bookSeats = async (req, res) => {
-    try {
-        const { showtimeId, seatsToBook } = req.body;
-        const userId = req?.user?.id;
-        if (!userId) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        const parsedInput = lockSeatsInput.safeParse({
-            showtimeId,
-            seatsToBook,
-        });
-        if (!parsedInput.success) {
-            return res
-                .status(400)
-                .json({ message: "Invalid input", error: parsedInput.error.errors });
-        }
-        for (const seat of seatsToBook) {
-            const key = `lock:seat:${showtimeId}:${seat}`;
-            const lockedBy = await redis_1.redis.get(key);
-            const success = await redis_1.redis.del(key);
-            if (!success) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Seat ${seat} is not locked`,
-                });
-            }
-            if (lockedBy !== userId) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Seat ${seat} is locked by another user`,
-                });
-            }
-        }
-        const seats = await prisma.seat.findMany({
-            where: {
-                showtimeId,
-                number: { in: seatsToBook },
-                isBooked: false,
-            },
-        });
-        if (seats.length !== seatsToBook.length) {
-            return res.status(400).json({
-                success: false,
-                message: "Some seats are already booked",
-            });
-        }
-        const seatIds = seats.map((seat) => seat.id);
-        const result = await prisma.$transaction(async (tx) => {
-            // Create reservation
-            const reservation = await tx.reservation.create({
-                data: {
-                    showtime: {
-                        connect: { id: showtimeId },
-                    },
-                    user: {
-                        connect: { id: userId },
-                    },
-                    seats: {
-                        connect: seatIds.map((id) => ({ id })),
-                    },
-                },
-            });
-            if (!reservation) {
-                throw new Error("Reservation failed");
-            }
-            await tx.seat.updateMany({
-                where: {
-                    id: { in: seatIds },
-                },
-                data: {
-                    isBooked: true,
-                    reservationId: reservation.id,
-                },
-            });
-            return reservation;
-        });
-        return res.status(200).json({
-            success: true,
-            message: "Seats booked successfully",
-            reservation: result,
-        });
-    }
-    catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            success: false,
-            err,
-        });
-    }
-};
-exports.bookSeats = bookSeats;
+// export const bookSeats = async (
+//   req: Request & { user?: { id?: string } },
+//   res: Response
+// ) => {
+//   try {
+//     const { showtimeId, seatsToBook } = req.body;
+//     const userId = req?.user?.id;
+//     if (!userId) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+//     const parsedInput = lockSeatsInput.safeParse({
+//       showtimeId,
+//       seatsToBook,
+//     });
+//     if (!parsedInput.success) {
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid input", error: parsedInput.error.errors });
+//     }
+//     for (const seat of seatsToBook) {
+//       const key = `lock:seat:${showtimeId}:${seat}`;
+//       const lockedBy = await redis.get(key);
+//       const success = await redis.del(key);
+//       if (!success) {
+//         return res.status(400).json({
+//           success: false,
+//           message: `Seat ${seat} is not locked`,
+//         });
+//       }
+//       if (lockedBy !== userId) {
+//         return res.status(400).json({
+//           success: false,
+//           message: `Seat ${seat} is locked by another user`,
+//         });
+//       }
+//     }
+//     const seats = await prisma.seat.findMany({
+//       where: {
+//         showtimeId,
+//         number: { in: seatsToBook },
+//         isBooked: false,
+//       },
+//     });
+//     if (seats.length !== seatsToBook.length) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Some seats are already booked",
+//       });
+//     }
+//     const seatIds = seats.map((seat) => seat.id);
+//     const result = await prisma.$transaction(async (tx) => {
+//       // Create reservation
+//       const reservation = await tx.reservation.create({
+//         data: {
+//           showtime: {
+//             connect: { id: showtimeId },
+//           },
+//           user: {
+//             connect: { id: userId },
+//           },
+//           seats: {
+//             connect: seatIds.map((id) => ({ id })),
+//           },
+//         },
+//       });
+//       if (!reservation) {
+//         throw new Error("Reservation failed");
+//       }
+//       await tx.seat.updateMany({
+//         where: {
+//           id: { in: seatIds },
+//         },
+//         data: {
+//           isBooked: true,
+//           reservationId: reservation.id,
+//         },
+//       });
+//       return reservation;
+//     });
+//     return res.status(200).json({
+//       success: true,
+//       message: "Seats booked successfully",
+//       reservation: result,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     return res.status(500).json({
+//       success: false,
+//       err,
+//     });
+//   }
+// };
