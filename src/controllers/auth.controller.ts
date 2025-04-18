@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { generateToken } from "../services/jwt";
 import { userSignUpInput, verifyOTPInput } from "../utils/zodTypes";
 import { totp } from "otplib";
+import { sendOTPEmail } from "../utils/sendEmail";
 
 totp.options = {
   digits: 6,
@@ -50,7 +51,13 @@ export const signup = async (req: Request, res: Response) => {
 
     const otp = totp.generate(userSecret);
 
-    //todo add email service to send otp
+    try {
+      const data = await sendOTPEmail({ to: email, otp });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ message: "Failed to send OTP email", error: err });
+    }
 
     return res.status(200).json({
       success: true,

@@ -9,6 +9,7 @@ const client_1 = require("@prisma/client");
 const jwt_1 = require("../services/jwt");
 const zodTypes_1 = require("../utils/zodTypes");
 const otplib_1 = require("otplib");
+const sendEmail_1 = require("../utils/sendEmail");
 otplib_1.totp.options = {
     digits: 6,
     step: 300, // 5 minute validity
@@ -44,7 +45,14 @@ const signup = async (req, res) => {
         const baseSecret = process.env.OTP_SECRET ?? "bansi123";
         const userSecret = email + baseSecret;
         const otp = otplib_1.totp.generate(userSecret);
-        //todo add email service to send otp
+        try {
+            const data = await (0, sendEmail_1.sendOTPEmail)({ to: email, otp });
+        }
+        catch (err) {
+            return res
+                .status(500)
+                .json({ message: "Failed to send OTP email", error: err });
+        }
         return res.status(200).json({
             success: true,
             message: "An otp has been sent to your email, please verify",
