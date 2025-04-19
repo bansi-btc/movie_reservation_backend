@@ -8,6 +8,7 @@ import reservationRoutes from "./routes/reservation.route";
 import { cloudinaryConnect } from "./config/cloudinary";
 import multer from "multer";
 import { redis } from "./redis";
+import { bookseatsWebhook } from "./controllers/reservation.controller";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -15,6 +16,12 @@ const upload = multer({ storage });
 dotenv.config();
 
 const app = express();
+
+app.post(
+  "/webHook",
+  express.raw({ type: "application/json" }),
+  bookseatsWebhook as any
+); //this to allow only request from the stripe
 
 app.use(cors());
 app.use(express.json());

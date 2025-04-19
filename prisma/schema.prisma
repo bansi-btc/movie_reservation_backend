@@ -57,7 +57,6 @@ model Showtime {
   updatedAt DateTime @updatedAt
   seats     Seat[]
   reservations Reservation[]
-  bookingJobs BookingJob[]
 }
 
 model Seat {
@@ -82,18 +81,18 @@ model Reservation {
   seats       Seat[]
   createdAt   DateTime   @default(now())
   canceledAt  DateTime?
+  bookingJobs BookingJob[]
 }
 
 model BookingJob {
   id        String   @id @default(uuid())
-  userId    String
   status    BookingStatus @default(PENDING)
-  showtime Showtime  @relation(fields: [showtimeId], references: [id])
-  showtimeId String
   paymentSessionId String?  // Stripe session ID
   paymentUrl      String?   // Redirect link to checkout
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  reservationId String?
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
 }
 
 enum BookingStatus {
