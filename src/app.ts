@@ -24,7 +24,11 @@ app.post(
   bookseatsWebhook as any
 ); //this to allow only request from the stripe
 
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
