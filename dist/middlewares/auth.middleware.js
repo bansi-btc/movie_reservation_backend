@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isAdmin = exports.authenticate = void 0;
 const jwt_1 = require("../services/jwt");
 const authenticate = (req, res, next) => {
+    console.log(req.cookies.token, "cookies");
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
         return res.status(401).json({ message: "Missing token" });

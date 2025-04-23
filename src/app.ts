@@ -9,6 +9,7 @@ import { cloudinaryConnect } from "./config/cloudinary";
 import multer from "multer";
 import { redis } from "./redis";
 import { bookseatsWebhook } from "./controllers/reservation.controller";
+import cookieParser from "cookie-parser";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -25,6 +26,7 @@ app.post(
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 const PORT = process.env.PORT || 3000;
 

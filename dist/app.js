@@ -14,6 +14,7 @@ const cloudinary_1 = require("./config/cloudinary");
 const multer_1 = __importDefault(require("multer"));
 const redis_1 = require("./redis");
 const reservation_controller_1 = require("./controllers/reservation.controller");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage });
 dotenv_1.default.config();
@@ -21,6 +22,7 @@ const app = (0, express_1.default)();
 app.post("/webHook", express_1.default.raw({ type: "application/json" }), reservation_controller_1.bookseatsWebhook); //this to allow only request from the stripe
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use((0, cookie_parser_1.default)());
 const PORT = process.env.PORT || 3000;
 // app.use(upload.none());
 app.use("/auth", auth_routes_1.default);

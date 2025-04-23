@@ -114,7 +114,10 @@ const login = async (req, res) => {
         if (!isMatch)
             return res.status(401).json({ message: "Invalid credentials" });
         const token = (0, jwt_1.generateToken)({ id: user.id, role: user.role });
-        res.status(200).json({
+        res
+            .cookie("token", token)
+            .status(200)
+            .json({
             success: true,
             message: "Login successful",
             token,
