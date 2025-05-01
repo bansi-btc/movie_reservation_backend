@@ -133,7 +133,11 @@ export const login = async (req: Request, res: Response) => {
 
     const token = generateToken({ id: user.id, role: user.role });
     res
-      .cookie("token", token)
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      })
       .status(200)
       .json({
         success: true,
