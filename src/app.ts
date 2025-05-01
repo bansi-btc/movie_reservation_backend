@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.routes";
 import movieRoutes from "./routes/movie.routes";
 import showTimeRoutes from "./routes/shows.routes";
 import reservationRoutes from "./routes/reservation.route";
+import extensionRoutes from "./routes/extension.route";
 import { cloudinaryConnect } from "./config/cloudinary";
 import multer from "multer";
 import { redis } from "./redis";
@@ -36,6 +37,7 @@ app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
 
 // app.use(upload.none());
+app.use("/chrome-extension", extensionRoutes);
 app.use("/auth", authRoutes);
 app.use("/movie", movieRoutes);
 app.use("/shows", showTimeRoutes);

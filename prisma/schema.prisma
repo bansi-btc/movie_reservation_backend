@@ -34,7 +34,7 @@ model User {
 model Genre {
   id     String  @id @default(uuid())
   name   String  @unique
-  movies Movie[]
+  movies Movie[]  @relation("MovieGenres")
 }
 
 model Movie {
@@ -42,8 +42,7 @@ model Movie {
   title       String
   description String
   posterUrl   String
-  genre       Genre      @relation(fields: [genreId], references: [id])
-  genreId     String
+  genres      Genre[]   @relation("MovieGenres")
   showtimes   Showtime[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

@@ -10,11 +10,8 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.cookies.token ?? req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer "))
-    return res.status(401).json({ message: "Missing token" });
-
-  const token = authHeader.split(" ")[1];
+  const { token } = req.cookies;
+  if (!token) return res.status(401).json({ message: "Missing token" });
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
