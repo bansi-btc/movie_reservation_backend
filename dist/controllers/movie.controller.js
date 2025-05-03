@@ -47,7 +47,6 @@ const createMovie = async (req, res) => {
     try {
         const { title, description, genreIds } = req.body;
         const genres = JSON.parse(genreIds);
-        console.log(genres, "genres");
         const posterImage = req.file;
         const parsedInput = zodTypes_1.createMovieInput.safeParse({
             title,

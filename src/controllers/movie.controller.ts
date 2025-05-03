@@ -50,7 +50,6 @@ export const createMovie = async (req: Request, res: Response) => {
     const { title, description, genreIds } = req.body;
 
     const genres = JSON.parse(genreIds) as string[];
-    console.log(genres, "genres");
 
     const posterImage = req.file;
 
@@ -92,9 +91,6 @@ export const createMovie = async (req: Request, res: Response) => {
           genres: {
             connect: genres.map((id) => ({ id })),
           },
-        },
-        include: {
-          genres: true,
         },
       });
 
