@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createGenre,
   createMovie,
+  getGenres,
   listMovies,
 } from "../controllers/movie.controller";
 
@@ -19,6 +20,8 @@ router.post(
   isAdmin as any,
   createGenre as any
 );
+
+router.get("/get-genres", authenticate as any, getGenres as any);
 
 router.post(
   "/create-movie",

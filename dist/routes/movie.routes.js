@@ -11,6 +11,7 @@ const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage });
 const router = (0, express_1.Router)();
 router.post("/create-genre", auth_middleware_1.authenticate, auth_middleware_1.isAdmin, movie_controller_1.createGenre);
+router.get("/get-genres", auth_middleware_1.authenticate, movie_controller_1.getGenres);
 router.post("/create-movie", auth_middleware_1.authenticate, auth_middleware_1.isAdmin, upload.single("posterImage"), movie_controller_1.createMovie);
 router.get("/list-movies", movie_controller_1.listMovies);
 exports.default = router;

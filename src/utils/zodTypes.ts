@@ -1,4 +1,4 @@
-import { any, z } from "zod";
+import { z } from "zod";
 
 export const userSignUpInput = z.object({
   email: z.string().email(),
@@ -18,5 +18,5 @@ export const createMovieInput = z.object({
   title: z.string(),
   description: z.string(),
   posterImage: z.any(),
-  genreId: z.string(),
+  genreIds: z.array(z.string()),
 });

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listMovies = exports.createMovie = exports.createGenre = void 0;
+exports.listMovies = exports.createMovie = exports.getGenres = exports.createGenre = void 0;
 const client_1 = require("@prisma/client");
 const zodTypes_1 = require("../utils/zodTypes");
 const cloudinary_1 = require("../config/cloudinary");
@@ -26,25 +26,39 @@ const createGenre = async (req, res) => {
     }
 };
 exports.createGenre = createGenre;
+const getGenres = async (req, res) => {
+    try {
+        const genres = await prisma.genre.findMany();
+        if (!genres) {
+            return res.status(400).json({
+                success: false,
+                message: "Unable to get genre",
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            genres,
+        });
+    }
+    catch (err) { }
+};
+exports.getGenres = getGenres;
 const createMovie = async (req, res) => {
     try {
-        const { title, description, posterImage, genreId } = req.body;
+        const { title, description, genreIds } = req.body;
+        const genres = JSON.parse(genreIds);
+        console.log(genres, "genres");
+        const posterImage = req.file;
         const parsedInput = zodTypes_1.createMovieInput.safeParse({
             title,
             description,
             posterImage,
-            genreId,
+            genreIds: genres,
         });
         if (!parsedInput.success) {
             return res
                 .status(400)
                 .json({ message: "Invalid input", error: parsedInput.error.errors });
-        }
-        const genreExists = await prisma.genre.findUnique({
-            where: { id: genreId },
-        });
-        if (!genreExists) {
-            return res.status(404).json({ error: "Genre not found" });
         }
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
@@ -61,12 +75,12 @@ const createMovie = async (req, res) => {
                     title,
                     description,
                     posterUrl: result.secure_url,
-                    genre: {
-                        connect: { id: genreId },
+                    genres: {
+                        connect: genres.map((id) => ({ id })),
                     },
                 },
                 include: {
-                    genre: true,
+                    genres: true,
                 },
             });
             res.status(200).json({
@@ -88,7 +102,7 @@ exports.createMovie = createMovie;
 const listMovies = async (_, res) => {
     try {
         const movies = await prisma.movie.findMany({
-            include: { genre: true, showtimes: true },
+            include: { genres: true, showtimes: true },
         });
         res.json(movies);
     }

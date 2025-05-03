@@ -17,5 +17,5 @@ exports.createMovieInput = zod_1.z.object({
     title: zod_1.z.string(),
     description: zod_1.z.string(),
     posterImage: zod_1.z.any(),
-    genreId: zod_1.z.string(),
+    genreIds: zod_1.z.array(zod_1.z.string()),
 });
