@@ -78,9 +78,6 @@ const createMovie = async (req, res) => {
                         connect: genres.map((id) => ({ id })),
                     },
                 },
-                include: {
-                    genres: true,
-                },
             });
             res.status(200).json({
                 success: true,
@@ -94,6 +91,7 @@ const createMovie = async (req, res) => {
         }
     }
     catch (err) {
+        console.log(err);
         return res.status(500).json({ message: "Movie creation failed", err });
     }
 };
@@ -103,7 +101,11 @@ const listMovies = async (_, res) => {
         const movies = await prisma.movie.findMany({
             include: { genres: true, showtimes: true },
         });
-        res.json(movies);
+        res.status(200).json({
+            success: true,
+            message: "Movies fetched successfully",
+            movies,
+        });
     }
     catch {
         res.status(500).json({ error: "Could not fetch movies" });

@@ -69,7 +69,13 @@ const bookSeats = async (req, res) => {
             bookingJob,
         });
     }
-    catch (err) { }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
 };
 exports.bookSeats = bookSeats;
 // export const bookSeats = async (
@@ -247,6 +253,8 @@ const bookseatsWebhook = async (req, res) => {
                 },
             });
             return reservation;
+        }, {
+            timeout: 10000, // 10 seconds
         });
         if (!reservation) {
             return res.status(400).json({ message: "Failed to create reservation" });

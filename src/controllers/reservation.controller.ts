@@ -79,7 +79,13 @@ export const bookSeats = async (
       message: "Seats booking in progress",
       bookingJob,
     });
-  } catch (err) {}
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 
 // export const bookSeats = async (
@@ -255,54 +261,59 @@ export const bookseatsWebhook = async (req: Request, res: Response) => {
     // marked bookin JOB as success
     // delete the locks
 
-    const reservation = await prisma.$transaction(async (tx) => {
-      const seats = await tx.seat.findMany({
-        where: {
-          showtimeId,
-          number: { in: seatsToBook },
-          isBooked: false,
-        },
-      });
+    const reservation = await prisma.$transaction(
+      async (tx) => {
+        const seats = await tx.seat.findMany({
+          where: {
+            showtimeId,
+            number: { in: seatsToBook },
+            isBooked: false,
+          },
+        });
 
-      if (seats.length !== seatsToBook.length) {
-        throw new Error("Some seats are already booked we will refund you");
+        if (seats.length !== seatsToBook.length) {
+          throw new Error("Some seats are already booked we will refund you");
+        }
+
+        const seatIds = seats.map((s) => s.id);
+
+        await tx.seat.updateMany({
+          where: {
+            id: { in: seatIds },
+          },
+          data: {
+            isBooked: true,
+          },
+        });
+
+        const reservation = await tx.reservation.create({
+          data: {
+            showtime: { connect: { id: showtimeId } },
+            user: { connect: { id: userId } },
+            seats: {
+              connect: seatIds.map((id) => ({ id })),
+            },
+          },
+        });
+
+        await tx.bookingJob.update({
+          where: {
+            id: bookingId,
+          },
+          data: {
+            status: "SUCCESS",
+            reservation: {
+              connect: { id: reservation.id },
+            },
+          },
+        });
+
+        return reservation;
+      },
+      {
+        timeout: 10000, // 10 seconds
       }
-
-      const seatIds = seats.map((s) => s.id);
-
-      await tx.seat.updateMany({
-        where: {
-          id: { in: seatIds },
-        },
-        data: {
-          isBooked: true,
-        },
-      });
-
-      const reservation = await tx.reservation.create({
-        data: {
-          showtime: { connect: { id: showtimeId } },
-          user: { connect: { id: userId } },
-          seats: {
-            connect: seatIds.map((id) => ({ id })),
-          },
-        },
-      });
-
-      await tx.bookingJob.update({
-        where: {
-          id: bookingId,
-        },
-        data: {
-          status: "SUCCESS",
-          reservation: {
-            connect: { id: reservation.id },
-          },
-        },
-      });
-
-      return reservation;
-    });
+    );
     if (!reservation) {
       return res.status(400).json({ message: "Failed to create reservation" });
     }

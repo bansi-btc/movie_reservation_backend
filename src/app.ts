@@ -1,29 +1,21 @@
 import express, { Request, Response } from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import movieRoutes from "./routes/movie.routes";
 import showTimeRoutes from "./routes/shows.routes";
 import reservationRoutes from "./routes/reservation.route";
-import extensionRoutes from "./routes/extension.route";
 import { cloudinaryConnect } from "./config/cloudinary";
 import multer from "multer";
 import { redis } from "./redis";
 import { bookseatsWebhook } from "./controllers/reservation.controller";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 dotenv.config();
 
 const app = express();
-
-app.post(
-  "/webHook",
-  express.raw({ type: "application/json" }),
-  bookseatsWebhook as any
-); //this to allow only request from the stripe
 
 app.use(
   cors({
@@ -31,13 +23,20 @@ app.use(
     credentials: true,
   })
 );
+
+app.post(
+  "/webHook",
+  express.raw({ type: "application/json" }),
+  bookseatsWebhook as any
+); //this to allow only request from the stripe
+
 app.use(express.json());
 app.use(cookieParser());
 
 const PORT = process.env.PORT || 3000;
 
 // app.use(upload.none());
-app.use("/chrome-extension", extensionRoutes);
+// app.use("/chrome-extension", extensionRoutes);
 app.use("/auth", authRoutes);
 app.use("/movie", movieRoutes);
 app.use("/shows", showTimeRoutes);

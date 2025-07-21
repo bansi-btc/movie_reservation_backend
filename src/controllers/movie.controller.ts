@@ -105,6 +105,7 @@ export const createMovie = async (req: Request, res: Response) => {
       return res.status(500).json({ message: "Image upload failed", err });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: "Movie creation failed", err });
   }
 };
@@ -114,7 +115,12 @@ export const listMovies = async (_: Request, res: Response) => {
     const movies = await prisma.movie.findMany({
       include: { genres: true, showtimes: true },
     });
-    res.json(movies);
+
+    res.status(200).json({
+      success: true,
+      message: "Movies fetched successfully",
+      movies,
+    });
   } catch {
     res.status(500).json({ error: "Could not fetch movies" });
   }
