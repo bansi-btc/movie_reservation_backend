@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.verifyOTPController = exports.signup = void 0;
+exports.getUserDetails = exports.login = exports.verifyOTPController = exports.signup = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const client_1 = require("@prisma/client");
 const jwt_1 = require("../services/jwt");
@@ -134,3 +134,18 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
+const getUserDetails = async (req, res) => {
+    try {
+        const user = req.user;
+        console.log(user);
+        return res.status(200).json({
+            success: true,
+            message: "User details fetched successfully",
+            data: user,
+        });
+    }
+    catch (err) {
+        return res.status(500).json({ error: "Failed to get user details" });
+    }
+};
+exports.getUserDetails = getUserDetails;

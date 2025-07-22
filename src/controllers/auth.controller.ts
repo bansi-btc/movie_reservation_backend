@@ -150,3 +150,20 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Login failed" });
   }
 };
+
+export const getUserDetails = async (
+  req: Request & { user: { id: string; role: string } },
+  res: Response
+) => {
+  try {
+    const user = req.user;
+
+    return res.status(200).json({
+      success: true,
+      message: "User details fetched successfully",
+      userData: user,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Failed to get user details" });
+  }
+};
