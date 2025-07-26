@@ -137,11 +137,10 @@ exports.login = login;
 const getUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        console.log(user);
         return res.status(200).json({
             success: true,
             message: "User details fetched successfully",
-            data: user,
+            userData: user,
         });
     }
     catch (err) {

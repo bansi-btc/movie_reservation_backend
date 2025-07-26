@@ -3,6 +3,7 @@ import {
   createGenre,
   createMovie,
   getGenres,
+  getMovieDetails,
   listMovies,
 } from "../controllers/movie.controller";
 
@@ -32,5 +33,11 @@ router.post(
 );
 
 router.get("/list-movies", listMovies as any);
+
+router.get(
+  "/get-movie-details/:movieId",
+  authenticate as any,
+  getMovieDetails as any
+);
 
 export default router;

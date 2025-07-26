@@ -14,4 +14,5 @@ router.post("/create-genre", auth_middleware_1.authenticate, auth_middleware_1.i
 router.get("/get-genres", auth_middleware_1.authenticate, movie_controller_1.getGenres);
 router.post("/create-movie", auth_middleware_1.authenticate, auth_middleware_1.isAdmin, upload.single("posterImage"), movie_controller_1.createMovie);
 router.get("/list-movies", movie_controller_1.listMovies);
+router.get("/get-movie-details/:movieId", auth_middleware_1.authenticate, movie_controller_1.getMovieDetails);
 exports.default = router;

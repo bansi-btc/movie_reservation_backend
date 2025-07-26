@@ -125,3 +125,29 @@ export const listMovies = async (_: Request, res: Response) => {
     res.status(500).json({ error: "Could not fetch movies" });
   }
 };
+
+export const getMovieDetails = async (req: Request, res: Response) => {
+  try {
+    const { movieId } = req.params;
+
+    const movie = await prisma.movie.findUnique({
+      where: { id: movieId },
+      include: { genres: true, showtimes: true },
+    });
+
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Movie details fetched successfully",
+      movie,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Could not fetch movie details",
+      error: err,
+    });
+  }
+};
