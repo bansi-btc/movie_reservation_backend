@@ -6,4 +6,5 @@ const auth_middleware_1 = require("../middlewares/auth.middleware");
 const router = (0, express_1.Router)();
 router.post("/create-show", auth_middleware_1.authenticate, auth_middleware_1.isAdmin, showtime_controller_1.createShowtime);
 router.post("/list-show/:movieId", showtime_controller_1.listShowtimesOfMovie);
+router.get("/showSeatDetails/:showId", auth_middleware_1.authenticate, showtime_controller_1.getShowDetails);
 exports.default = router;

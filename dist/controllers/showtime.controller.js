@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listShowtimesOfMovie = exports.createShowtime = void 0;
+exports.getShowDetails = exports.listShowtimesOfMovie = exports.createShowtime = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const createShowtime = async (req, res) => {
@@ -70,3 +70,29 @@ const listShowtimesOfMovie = async (req, res) => {
     }
 };
 exports.listShowtimesOfMovie = listShowtimesOfMovie;
+const getShowDetails = async (req, res) => {
+    try {
+        const { showId } = req.params;
+        const showDetails = await prisma.showtime.findUnique({
+            where: { id: showId },
+            include: {
+                seats: true,
+            },
+        });
+        if (!showDetails) {
+            return res.status(404).json({ error: "Show not found" });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Seats details fetched successfully",
+            showDetails,
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: true,
+            message: "Internal server error",
+        });
+    }
+};
+exports.getShowDetails = getShowDetails;

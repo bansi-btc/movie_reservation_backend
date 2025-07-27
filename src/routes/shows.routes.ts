@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createShowtime,
+  getShowDetails,
   listShowtimesOfMovie,
 } from "../controllers/showtime.controller";
 import { authenticate, isAdmin } from "../middlewares/auth.middleware";
@@ -15,5 +16,11 @@ router.post(
 );
 
 router.post("/list-show/:movieId", listShowtimesOfMovie as any);
+
+router.get(
+  "/showSeatDetails/:showId",
+  authenticate as any,
+  getShowDetails as any
+);
 
 export default router;

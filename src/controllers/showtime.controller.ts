@@ -77,3 +77,31 @@ export const listShowtimesOfMovie = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch showtimes" });
   }
 };
+
+export const getShowDetails = async (req: Request, res: Response) => {
+  try {
+    const { showId } = req.params;
+
+    const showDetails = await prisma.showtime.findUnique({
+      where: { id: showId },
+      include: {
+        seats: true,
+      },
+    });
+
+    if (!showDetails) {
+      return res.status(404).json({ error: "Show not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Seats details fetched successfully",
+      showDetails,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: true,
+      message: "Internal server error",
+    });
+  }
+};
