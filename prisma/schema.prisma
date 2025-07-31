@@ -69,6 +69,7 @@ model Seat {
   reservation  Reservation?  @relation(fields: [reservationId], references: [id])
   reservationId String?
   createdAt    DateTime      @default(now())
+  price        Int           @default(0) 
 
   @@unique([showtimeId, number]) // Ensure seat number uniqueness per showtime
 }
@@ -86,14 +87,15 @@ model Reservation {
 }
 
 model BookingJob {
-  id        String   @id @default(uuid())
-  status    BookingStatus @default(PENDING)
-  paymentSessionId String?  // Stripe session ID
-  paymentUrl      String?   // Redirect link to checkout
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  reservationId String?
-  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+  id                    String   @id @default(uuid())
+  status                BookingStatus @default(PENDING)
+  paymentSessionId      String?  // Stripe session ID
+  paymentUrl            String?   // Redirect link to checkout
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  reservationId         String?
+  reservation           Reservation? @relation(fields: [reservationId], references: [id])
+  message               String? 
 }
 
 enum BookingStatus {
